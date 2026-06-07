@@ -4,9 +4,6 @@ import os
 
 app = Flask(__name__)
 
-TOKEN = os.getenv("TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
-
 
 @app.route("/")
 def home():
@@ -16,17 +13,32 @@ def home():
 @app.route("/webhook", methods=["POST"])
 def webhook():
 
+    print("========== ALL ENV ==========")
+
+    for k in os.environ:
+        if "TOKEN" in k or "CHAT" in k:
+            print(k, "=", os.environ.get(k))
+
+    TOKEN = os.environ.get("TOKEN")
+    CHAT_ID = os.environ.get("CHAT_ID")
+
+    print("TOKEN =", TOKEN)
+    print("CHAT_ID =", CHAT_ID)
+
     data = request.json
 
     print("========== WEBHOOK TRIGGERED ==========")
     print(data)
-    print("TOKEN:", TOKEN)
-    print("CHAT_ID:", CHAT_ID)
 
     signal = data.get("signal", "N/A")
     symbol = data.get("symbol", "N/A")
     price = data.get("price", "0")
     time = data.get("time", "N/A")
+
+    try:
+        price_float = float(price)
+    except:
+        price_float = 0
 
     message = f"""
 ━━━━━━━━━━━━━━
@@ -37,8 +49,8 @@ def webhook():
 
 💰 Entry : {price}
 
-🛑 Stop Loss : {float(price)-10:.2f}
-🎯 Take Profit : {float(price)+20:.2f}
+🛑 Stop Loss : {price_float-10:.2f}
+🎯 Take Profit : {price_float+20:.2f}
 
 📊 Risk Reward : 1 : 2
 
@@ -59,6 +71,10 @@ def webhook():
         "chat_id": CHAT_ID,
         "text": message
     }
+
+    print("========== TELEGRAM REQUEST ==========")
+    print(url)
+    print(payload)
 
     r = requests.post(url, json=payload)
 
