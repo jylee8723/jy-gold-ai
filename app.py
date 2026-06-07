@@ -1,17 +1,27 @@
 from flask import Flask, request
 import requests
+import os
 
 app = Flask(__name__)
 
-import os
-
 TOKEN = os.getenv("TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
+
+
+@app.route("/")
+def home():
+    return "JY GOLD AI RUNNING"
+
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
 
     data = request.json
+
+    print("========== WEBHOOK TRIGGERED ==========")
+    print(data)
+    print("TOKEN:", TOKEN)
+    print("CHAT_ID:", CHAT_ID)
 
     signal = data.get("signal", "N/A")
     symbol = data.get("symbol", "N/A")
@@ -50,9 +60,14 @@ def webhook():
         "text": message
     }
 
-    requests.post(url, json=payload)
+    r = requests.post(url, json=payload)
+
+    print("========== TELEGRAM RESPONSE ==========")
+    print(r.status_code)
+    print(r.text)
 
     return "OK"
 
+
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
